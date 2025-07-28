@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test Case Optimization</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f7f9fa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .header {
+      margin-top: 60px;
+      text-align: center;
+    }
+    .title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      color: #2d3748;
+    }
+    .subtitle {
+      font-size: 1.2rem;
+      color: #4a5568;
+      margin-top: 16px;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .input-method {
+      margin-top: 40px;
+      background: #fff;
+      padding: 24px 32px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      text-align: center;
+    }
+    .input-method label {
+      font-size: 1rem;
+      margin-right: 24px;
+      cursor: pointer;
+    }
+    .input-method input[type="radio"] {
+      margin-right: 8px;
+    }
+    .input-fields {
+      margin-top: 24px;
+      width: 100%;
+      max-width: 400px;
+      background: #fff;
+      padding: 24px 32px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .hidden { display: none; }
+    .drop-zone {
+      border: 2px dashed #3182ce;
+      border-radius: 6px;
+      padding: 24px;
+      text-align: center;
+      color: #3182ce;
+      margin-bottom: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .drop-zone.dragover {
+      background: #ebf8ff;
+    }
+    .error-message {
+      color: #e53e3e;
+      font-size: 0.95rem;
+      margin-top: 8px;
+    }
+    .form-group { margin-bottom: 16px; }
+    button {
+      background: #3182ce;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    button:disabled {
+      background: #a0aec0;
+      cursor: not-allowed;
+    }
+    .action-buttons {
+      margin-top: 24px;
+      text-align: center;
+    }
+    .action-buttons button {
+      margin-right: 16px;
+    }
+    .output-section {
+      display: none;
+      margin-top: 32px;
+      max-width: 500px;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">Test Case Optimization</div>
+    <div class="subtitle">
+      Upload your test cases and enter a Jira story to optimize your test suite for efficiency and coverage.
+    </div>
+  </div>
+  <div class="input-method">
+    <form id="methodForm">
+      <label>
+        <input type="radio" name="inputMethod" value="upload" checked>
+        Upload Test Case Pack
+      </label>
+      <label>
+        <input type="radio" name="inputMethod" value="jira">
+        Enter Jira Story
+      </label>
+    </form>
+  </div>
+  <div class="input-fields" id="uploadFields">
+    <div class="drop-zone" id="dropZone">Drag & drop your file here or click to select</div>
+    <input type="file" id="fileInput" accept=".xlsx,.csv,.json" style="display:none;">
+    <div class="error-message" id="fileError"></div>
+    <div class="action-buttons">
+      <button type="button" id="runOptimization">Run Optimization</button>
+      <button type="reset" id="resetForm" style="background:#e2e8f0; color:#2d3748;">Reset Form</button>
+    </div>
+  </div>
+  <div class="input-fields hidden" id="jiraFields">
+    <div class="form-group">
+      <label for="jiraId">Jira Story ID:</label>
+      <input type="text" id="jiraId" placeholder="e.g., PROJ-123" style="width:100%;padding:8px;">
+    </div>
+    <div class="form-group">
+      <label for="jiraDesc">Story Description (optional):</label>
+      <textarea id="jiraDesc" rows="3" style="width:100%;padding:8px;"></textarea>
+    </div>
+    <button type="button" id="fetchJira">Fetch Story Details</button>
+    <div class="action-buttons">
+      <button type="button" id="runOptimizationJira">Run Optimization</button>
+      <button type="reset" id="resetFormJira" style="background:#e2e8f0; color:#2d3748;">Reset Form</button>
+    </div>
+  </div>
+  <div class="output-section" id="outputSection">
+    <h3>Optimization Results</h3>
+    <div id="summaryMetrics">
+      <!-- Summary metrics will appear here -->
+    </div>
+    <button type="button" id="expandReport" style="margin-top:16px;">Show Detailed Report</button>
+    <div id="detailedReport" style="display:none; margin-top:16px;">
+      <!-- Detailed report will appear here -->
+    </div>
+    <button type="button" id="downloadBtn" style="margin-top:16px;">Download Optimized Test Pack</button>
+  </div>
+  <script>
+    // Toggle input fields
+    const methodForm = document.getElementById('methodForm');
+    const uploadFields = document.getElementById('uploadFields');
+    const jiraFields = document.getElementById('jiraFields');
+    methodForm.addEventListener('change', (e) => {
+      if (e.target.value === 'upload') {
+        uploadFields.classList.remove('hidden');
+        jiraFields.classList.add('hidden');
+      } else {
+        uploadFields.classList.add('hidden');
+        jiraFields.classList.remove('hidden');
+      }
+    });
+
+    // Drag-and-drop support
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileError = document.getElementById('fileError');
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      handleFile(e.dataTransfer.files[0]);
+    });
+    fileInput.addEventListener('change', (e) => {
+      handleFile(e.target.files[0]);
+    });
+    function handleFile(file) {
+      if (!file) return;
+      const validExts = ['.xlsx', '.csv', '.json'];
+      const ext = file.name.slice(file.name.lastIndexOf('.'));
+      if (!validExts.includes(ext)) {
+        fileError.textContent = 'Invalid file type. Please upload .xlsx, .csv, or .json file.';
+      } else {
+        fileError.textContent = '';
+        dropZone.textContent = `Selected file: ${file.name}`;
+      }
+    }
+
+    // Placeholder for Jira fetch button
+    document.getElementById('fetchJira').addEventListener('click', () => {
+      alert('Fetching Jira story details... (API integration needed)');
+    });
+
+    // Reset functionality
+    document.getElementById('resetForm').onclick = function() {
+      fileInput.value = '';
+      dropZone.textContent = 'Drag & drop your file here or click to select';
+      fileError.textContent = '';
+    };
+    document.getElementById('resetFormJira').onclick = function() {
+      document.getElementById('jiraId').value = '';
+      document.getElementById('jiraDesc').value = '';
+    };
+
+    // Output section logic
+    function showResults() {
+      document.getElementById('outputSection').style.display = 'block';
+      document.getElementById('summaryMetrics').innerHTML = `
+        <strong>Total test cases before:</strong> 120<br>
+        <strong>Total test cases after:</strong> 80<br>
+        <strong>% Reduction:</strong> 33%<br>
+        <strong>Coverage improvement:</strong> +12%
+      `;
+      document.getElementById('detailedReport').innerHTML = `
+        <ul>
+          <li>Removed 40 redundant test cases</li>
+          <li>Improved coverage by adding 5 new cases</li>
+          <li>Prioritized critical paths</li>
+        </ul>
+      `;
+    }
+
+    document.getElementById('runOptimization').onclick = function() {
+      showResults();
+    };
+    document.getElementById('runOptimizationJira').onclick = function() {
+      showResults();
+    };
+
+    document.getElementById('expandReport').onclick = function() {
+      const report = document.getElementById('detailedReport');
+      report.style.display = report.style.display === 'none' ? 'block' : 'none';
+      this.textContent = report.style.display === 'none' ? 'Show Detailed Report' : 'Hide Detailed Report';
+    };
+
+    document.getElementById('downloadBtn').onclick = function() {
+      alert('Download started! (Implement file generation logic)');
+    };
+  </script>
+</body>
+</html>
