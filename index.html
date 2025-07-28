@@ -77,6 +77,19 @@
       margin-top: 8px;
     }
     .form-group { margin-bottom: 16px; }
+    .optimization-settings {
+      margin-top: 16px;
+      margin-bottom: 16px;
+      background: #f1f5f9;
+      padding: 16px;
+      border-radius: 6px;
+    }
+    .optimization-settings label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
     button {
       background: #3182ce;
       color: #fff;
@@ -131,6 +144,13 @@
     <div class="drop-zone" id="dropZone">Drag & drop your file here or click to select</div>
     <input type="file" id="fileInput" accept=".xlsx,.csv,.json" style="display:none;">
     <div class="error-message" id="fileError"></div>
+    <div class="optimization-settings">
+      <strong>Optimization Goals:</strong>
+      <label><input type="checkbox" id="goalRedundancy"> Minimize Redundancy</label>
+      <label><input type="checkbox" id="goalCoverage"> Maximize Coverage</label>
+      <label><input type="checkbox" id="goalCritical"> Prioritize Critical Paths</label>
+      <label><input type="checkbox" id="goalObsolete"> Remove Obsolete Tests</label>
+    </div>
     <div class="action-buttons">
       <button type="button" id="runOptimization">Run Optimization</button>
       <button type="reset" id="resetForm" style="background:#e2e8f0; color:#2d3748;">Reset Form</button>
@@ -146,6 +166,13 @@
       <textarea id="jiraDesc" rows="3" style="width:100%;padding:8px;"></textarea>
     </div>
     <button type="button" id="fetchJira">Fetch Story Details</button>
+    <div class="optimization-settings">
+      <strong>Optimization Goals:</strong>
+      <label><input type="checkbox" id="goalRedundancyJira"> Minimize Redundancy</label>
+      <label><input type="checkbox" id="goalCoverageJira"> Maximize Coverage</label>
+      <label><input type="checkbox" id="goalCriticalJira"> Prioritize Critical Paths</label>
+      <label><input type="checkbox" id="goalObsoleteJira"> Remove Obsolete Tests</label>
+    </div>
     <div class="action-buttons">
       <button type="button" id="runOptimizationJira">Run Optimization</button>
       <button type="reset" id="resetFormJira" style="background:#e2e8f0; color:#2d3748;">Reset Form</button>
@@ -217,10 +244,20 @@
       fileInput.value = '';
       dropZone.textContent = 'Drag & drop your file here or click to select';
       fileError.textContent = '';
+      // Uncheck optimization goals
+      document.getElementById('goalRedundancy').checked = false;
+      document.getElementById('goalCoverage').checked = false;
+      document.getElementById('goalCritical').checked = false;
+      document.getElementById('goalObsolete').checked = false;
     };
     document.getElementById('resetFormJira').onclick = function() {
       document.getElementById('jiraId').value = '';
       document.getElementById('jiraDesc').value = '';
+      // Uncheck optimization goals
+      document.getElementById('goalRedundancyJira').checked = false;
+      document.getElementById('goalCoverageJira').checked = false;
+      document.getElementById('goalCriticalJira').checked = false;
+      document.getElementById('goalObsoleteJira').checked = false;
     };
 
     // Output section logic
